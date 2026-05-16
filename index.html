@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<!-- saved from url=(0041)file:///Users/nqya/Downloads/index_1.html -->
+<html lang="zh-TW"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>日語文法解析 Japanese Grammar Analyzer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&family=Noto+Serif+JP:wght@400;700&display=swap');
+
+  :root {
+    --bg: #f7f5f0;
+    --surface: #ffffff;
+    --border: rgba(0,0,0,0.1);
+    --border-strong: rgba(0,0,0,0.2);
+    --text: #1a1a1a;
+    --text-muted: #6b6b6b;
+    --text-hint: #aaa;
+    --purple-bg: #eeedfe;
+    --purple-mid: #7f77dd;
+    --purple-dark: #534ab7;
+    --teal-bg: #e1f5ee;
+    --teal-mid: #1d9e75;
+    --teal-dark: #0f6e56;
+    --coral-bg: #faece7;
+    --coral-mid: #d85a30;
+    --coral-dark: #712b13;
+    --amber-bg: #faeeda;
+    --amber-mid: #ba7517;
+    --amber-dark: #633806;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+  }
+
+  .container {
+    max-width: 680px;
+    margin: 0 auto;
+  }
+
+  /* Header */
+  .header {
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 26px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .header h1 span {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--text-muted);
+    display: block;
+    font-family: 'Noto Serif JP', serif;
+    margin-top: 2px;
+  }
+  .header p {
+    font-size: 14px;
+    color: var(--text-muted);
+  }
+
+  /* Step bar */
+  .step-bar {
+    display: flex;
+    gap: 0;
+    margin-bottom: 1.5rem;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    border: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .step-item {
+    flex: 1;
+    padding: 10px 4px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--text-hint);
+    background: transparent;
+    border-right: 1px solid var(--border);
+    transition: all 0.2s;
+  }
+  .step-item:last-child { border-right: none; }
+  .step-item.active { background: var(--purple-bg); color: var(--purple-dark); font-weight: 500; }
+  .step-item.done { background: var(--teal-bg); color: var(--teal-dark); }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1rem;
+  }
+  .card.accent-purple { border-color: var(--purple-mid); }
+  .card.accent-teal { border-color: var(--teal-mid); }
+
+  /* API setup */
+  .api-setup {
+    background: var(--amber-bg);
+    border: 1px solid var(--amber-mid);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .api-setup p { font-size: 13px; color: var(--amber-dark); margin-bottom: 10px; line-height: 1.6; }
+  .api-setup-label { font-size: 12px; font-weight: 500; color: var(--amber-dark); margin-bottom: 6px; }
+  .api-setup input[type=text] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--amber-mid);
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    font-family: monospace;
+    background: white;
+    color: var(--text);
+    margin-bottom: 10px;
+  }
+  .api-setup input:focus { outline: 2px solid var(--purple-mid); border-color: transparent; }
+
+  /* Inputs */
+  textarea {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 20px;
+    font-family: 'Noto Sans JP', sans-serif;
+    color: var(--text);
+    background: transparent;
+    resize: none;
+    line-height: 1.6;
+  }
+  .input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 12px;
+    padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  .hint { font-size: 12px; color: var(--text-hint); }
+
+  /* Buttons */
+  button {
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 8px 18px;
+    font-size: 14px;
+    cursor: pointer;
+    background: white;
+    color: var(--text);
+    font-family: 'Noto Sans JP', sans-serif;
+    transition: all 0.15s;
+  }
+  button:hover { background: var(--bg); }
+  button:active { transform: scale(0.97); }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  button.primary {
+    background: var(--text);
+    color: white;
+    border-color: var(--text);
+  }
+  button.primary:hover { opacity: 0.85; background: var(--text); }
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 1rem; }
+
+  /* Section label */
+  .section-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  /* Token chips */
+  .token-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 1rem;
+  }
+  .token {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 8px 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .token:hover { border-color: var(--purple-mid); }
+  .token.sel { border: 2px solid var(--purple-mid); background: var(--purple-bg); }
+  .t-reading { font-size: 11px; color: var(--purple-dark); font-weight: 500; margin-bottom: 2px; min-height: 14px; }
+  .t-word { font-size: 18px; font-weight: 500; }
+  .t-pos { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+  /* Detail rows */
+  .drow { display: flex; gap: 8px; font-size: 13px; margin-bottom: 6px; }
+  .dlabel { color: var(--text-muted); min-width: 52px; flex-shrink: 0; }
+  .dval { color: var(--text); line-height: 1.5; }
+
+  /* Badges */
+  .badge {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+    background: var(--purple-bg);
+    color: var(--purple-dark);
+  }
+
+  /* Summary */
+  .summary-box {
+    background: var(--bg);
+    border-radius: var(--radius-sm);
+    padding: 1rem 1.25rem;
+    font-size: 15px;
+    line-height: 1.8;
+    margin-bottom: 1rem;
+  }
+  .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 1rem; }
+  .gtag {
+    background: var(--teal-bg);
+    color: var(--teal-dark);
+    font-size: 12px;
+    font-weight: 500;
+    padding: 4px 12px;
+    border-radius: 100px;
+  }
+
+  /* Quiz */
+  .quiz-chinese {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 6px;
+    font-family: 'Noto Serif JP', serif;
+  }
+  .quiz-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 1.25rem; line-height: 1.6; }
+
+  /* Feedback */
+  .feedback-banner {
+    border-radius: var(--radius);
+    padding: 1rem 1.25rem;
+    margin-bottom: 1rem;
+    font-size: 14px;
+    line-height: 1.7;
+  }
+  .feedback-banner.correct { background: var(--teal-bg); border: 1px solid var(--teal-mid); color: var(--teal-dark); }
+  .feedback-banner.wrong { background: var(--coral-bg); border: 1px solid var(--coral-mid); color: var(--coral-dark); }
+  .feedback-banner strong { font-size: 15px; font-weight: 700; display: block; margin-bottom: 6px; }
+  .model-answer {
+    margin-top: 10px;
+    padding: 8px 12px;
+    background: rgba(255,255,255,0.6);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+  }
+  .model-answer span { font-size: 18px; font-weight: 700; display: block; margin-top: 2px; }
+  .tip-box {
+    background: var(--purple-bg);
+    border-radius: var(--radius-sm);
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--purple-dark);
+    margin-top: 8px;
+  }
+
+  /* Loading */
+  .loading-bar {
+    display: none;
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+  .loading-bar .dots::after {
+    content: '';
+    animation: dots 1.2s steps(4, end) infinite;
+  }
+  @keyframes dots {
+    0%,20%{content:''} 40%{content:'.'} 60%{content:'..'} 80%,100%{content:'...'}
+  }
+
+  /* Error */
+  .error-msg { color: var(--coral-dark); font-size: 13px; margin-top: 8px; background: var(--coral-bg); padding: 8px 12px; border-radius: var(--radius-sm); display: none; }
+
+  /* Key saved indicator */
+  .key-saved { font-size: 12px; color: var(--teal-dark); background: var(--teal-bg); padding: 4px 10px; border-radius: 100px; display: inline-block; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>日語文法解析
+      <span>Japanese Grammar Analyzer</span>
+    </h1>
+    <p>輸入日文句子 → AI 解析文法 → 練習造句 → 訂正，循環學習</p>
+  </div>
+
+  <!-- API Key Setup -->
+  <div class="api-setup" id="apiSetup">
+    <p>請輸入你的 Anthropic API Key。Key 只儲存在你的瀏覽器裡（localStorage），不會傳送到任何第三方伺服器。</p>
+    <div class="api-setup-label">API Key</div>
+    <input type="text" id="apiKeyInput" placeholder="sk-ant-api03-..." autocomplete="off">
+    <button class="primary" onclick="saveKey()">儲存並開始使用</button>
+  </div>
+
+  <div id="keyStatus" style="margin-bottom:1rem;display:none">
+    <span class="key-saved">✓ API Key 已儲存</span>
+    <button style="font-size:12px;padding:4px 10px;margin-left:8px" onclick="changeKey()">更換 Key</button>
+  </div>
+
+  <!-- Step bar -->
+  <div class="step-bar">
+    <div class="step-item active" id="s1">① 輸入句子</div>
+    <div class="step-item" id="s2">② 文法解析</div>
+    <div class="step-item" id="s3">③ やってみよ</div>
+    <div class="step-item" id="s4">④ AI 訂正</div>
+  </div>
+
+  <!-- Step 1: Input -->
+  <div id="stepInput">
+    <div class="card">
+      <textarea id="jpInput" rows="3" placeholder="輸入日文句子，例如：今日は学校に行きました。"></textarea>
+      <div class="input-footer">
+        <span class="hint">支援平假名・片假名・漢字混合</span>
+        <button class="primary" id="analyzeBtn" onclick="doAnalyze()">解析 →</button>
+      </div>
+    </div>
+    <div class="error-msg" id="inputError"></div>
+  </div>
+
+  <!-- Step 2: Analysis -->
+  <div id="stepAnalysis" style="display:none">
+    <div class="section-label">單字拆解（點選查看詳情）</div>
+    <div class="token-row" id="tokenRow"></div>
+
+    <div class="card accent-purple" id="detailCard" style="display:none">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span style="font-size:24px;font-weight:700" id="dWord"></span>
+        <span class="badge" id="dBadge"></span>
+      </div>
+      <div class="drow"><span class="dlabel">讀音</span><span class="dval" id="dReading"></span></div>
+      <div class="drow"><span class="dlabel">原形</span><span class="dval" id="dBase"></span></div>
+      <div class="drow"><span class="dlabel">活用形</span><span class="dval" id="dConj"></span></div>
+      <div class="drow"><span class="dlabel">中文</span><span class="dval" id="dMeaning"></span></div>
+      <div class="drow"><span class="dlabel">說明</span><span class="dval" id="dNote"></span></div>
+    </div>
+
+    <div class="section-label">整句分析</div>
+    <div class="summary-box" id="summaryBox"></div>
+    <div class="tags" id="grammarTags"></div>
+
+    <div class="btn-row">
+      <button class="primary" onclick="goQuiz()">やってみよ → 出練習題</button>
+      <button onclick="reset()">換一句重新開始</button>
+    </div>
+  </div>
+
+  <!-- Step 3: Quiz -->
+  <div id="stepQuiz" style="display:none">
+    <div class="card">
+      <div class="section-label">請把這句話翻譯成日文</div>
+      <div class="quiz-chinese" id="quizPrompt"></div>
+      <div class="quiz-sub" id="quizSub"></div>
+      <textarea id="quizInput" rows="2" placeholder="用日文作答…"></textarea>
+      <div class="input-footer">
+        <span class="hint" id="quizKeyGrammar"></span>
+        <button class="primary" onclick="doCheck()">提交作答 →</button>
+      </div>
+    </div>
+    <div class="error-msg" id="quizError"></div>
+  </div>
+
+  <!-- Step 4: Feedback -->
+  <div id="stepFeedback" style="display:none">
+    <div class="feedback-banner" id="feedbackBanner"></div>
+    <div class="btn-row">
+      <button class="primary" onclick="goQuiz()">再出一題</button>
+      <button onclick="reset()">換一句重新開始</button>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div class="loading-bar" id="loadingBar">
+    <span id="loadingText">AI 處理中</span><span class="dots"></span>
+  </div>
+
+</div>
+
+<script>
+let apiKey = localStorage.getItem('jp_analyzer_key') || '';
+let analysisData = null;
+let quizData = null;
+
+// Init
+(function init(){
+  if(apiKey){
+    document.getElementById('apiSetup').style.display='none';
+    document.getElementById('keyStatus').style.display='block';
+  }
+})();
+
+function saveKey(){
+  const k = document.getElementById('apiKeyInput').value.trim();
+  if(!k.startsWith('sk-ant')){
+    alert('請輸入正確的 Claude API Key（以 sk-ant 開頭）');
+    return;
+  }
+  apiKey = k;
+  localStorage.setItem('jp_analyzer_key', k);
+  document.getElementById('apiSetup').style.display='none';
+  document.getElementById('keyStatus').style.display='block';
+}
+
+function changeKey(){
+  apiKey = '';
+  localStorage.removeItem('jp_analyzer_key');
+  document.getElementById('apiKeyInput').value='';
+  document.getElementById('apiSetup').style.display='block';
+  document.getElementById('keyStatus').style.display='none';
+}
+
+function setStep(n){
+  for(let i=1;i<=4;i++){
+    const el=document.getElementById('s'+i);
+    el.className='step-item'+(i<n?' done':i===n?' active':'');
+  }
+}
+
+function showLoading(msg){
+  document.getElementById('loadingText').textContent=msg||'AI 處理中';
+  document.getElementById('loadingBar').style.display='block';
+}
+function hideLoading(){
+  document.getElementById('loadingBar').style.display='none';
+}
+function showError(id, msg){
+  const el=document.getElementById(id);
+  el.textContent=msg;
+  el.style.display='block';
+}
+function hideError(id){ document.getElementById(id).style.display='none'; }
+
+async function callClaude(userPrompt, systemPrompt){
+  if(!apiKey) throw new Error('請先設定 API Key');
+  const res = await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'x-api-key': apiKey,
+      'anthropic-version':'2023-06-01',
+      'anthropic-dangerous-direct-browser-access': 'true'
+    },
+    body: JSON.stringify({
+      model:'claude-sonnet-4-20250514',
+      max_tokens:1500,
+      system: systemPrompt,
+      messages:[{role:'user', content: userPrompt}]
+    })
+  });
+  const d = await res.json();
+  if(d.error) throw new Error(d.error.message);
+  return d.content[0].text;
+}
+
+async function doAnalyze(){
+  const sentence = document.getElementById('jpInput').value.trim();
+  if(!sentence){ showError('inputError','請輸入日文句子'); return; }
+  hideError('inputError');
+  if(!apiKey){ showError('inputError','請先在上方輸入 API Key'); return; }
+  document.getElementById('analyzeBtn').disabled=true;
+  showLoading('AI 解析文法中');
+
+  const system = `你是專業日語文法老師，負責幫中文母語者分析日語句子。
+請分析用戶輸入的日語句子，回傳純 JSON，不要有任何額外說明、不要有 markdown 代碼塊。
+格式如下：
+{
+  "sentence": "原句",
+  "tokens": [
+    {
+      "word": "單字原文",
+      "reading": "讀音（平假名）",
+      "pos": "詞性（例：名詞、動詞、助詞・主題、形容詞）",
+      "base": "原形（若無活用則與word相同）",
+      "conjugation": "活用形說明（若無活用則填 — ）",
+      "meaning": "中文翻譯",
+      "note": "補充說明（學習重點、特殊用法等，可簡短）"
+    }
+  ],
+  "summary": "整句中文說明，包含語意和語氣（2-3句）",
+  "grammarPoints": ["文法點1", "文法點2", "文法點3"]
+}`;
+
+  try {
+    const raw = await callClaude(sentence, system);
+    const clean = raw.replace(/```json|```/g,'').trim();
+    analysisData = JSON.parse(clean);
+    renderAnalysis(analysisData);
+    document.getElementById('stepInput').style.display='none';
+    document.getElementById('stepAnalysis').style.display='block';
+    setStep(2);
+  } catch(e){
+    showError('inputError','解析失敗：'+e.message);
+  } finally {
+    hideLoading();
+    document.getElementById('analyzeBtn').disabled=false;
+  }
+}
+
+function renderAnalysis(data){
+  const row = document.getElementById('tokenRow');
+  row.innerHTML='';
+  document.getElementById('detailCard').style.display='none';
+
+  data.tokens.forEach(t=>{
+    const div=document.createElement('div');
+    div.className='token';
+    div.innerHTML=`<div class="t-reading">${t.reading||'&nbsp;'}</div><div class="t-word">${t.word}</div><div class="t-pos">${t.pos}</div>`;
+    div.onclick=()=>selectToken(t,div);
+    row.appendChild(div);
+  });
+
+  document.getElementById('summaryBox').textContent=data.summary;
+  document.getElementById('grammarTags').innerHTML=
+    data.grammarPoints.map(g=>`<span class="gtag">${g}</span>`).join('');
+}
+
+function selectToken(t, el){
+  document.querySelectorAll('.token').forEach(x=>x.classList.remove('sel'));
+  el.classList.add('sel');
+  const dc=document.getElementById('detailCard');
+  dc.style.display='block';
+  document.getElementById('dWord').textContent=t.word;
+  document.getElementById('dBadge').textContent=t.pos;
+  document.getElementById('dReading').textContent=t.reading||'—';
+  document.getElementById('dBase').textContent=t.base||t.word;
+  document.getElementById('dConj').textContent=t.conjugation||'—';
+  document.getElementById('dMeaning').textContent=t.meaning||'—';
+  document.getElementById('dNote').textContent=t.note||'—';
+}
+
+async function goQuiz(){
+  document.getElementById('stepAnalysis').style.display='none';
+  document.getElementById('stepFeedback').style.display='none';
+  showLoading('AI 出題中');
+  setStep(3);
+
+  const system = `你是日語練習題設計師。根據給定的句子分析資料，設計一道結構相似但換了不同情境的中文翻譯練習題，讓學習者試著用日語作答。
+回傳純 JSON，不要有任何額外說明、不要有 markdown 代碼塊：
+{
+  "chinesePrompt": "中文題目（一句自然的中文，結構與原句相似，但換了時間、地點或對象）",
+  "hint": "提示文字（告訴學習者用哪個文法句型，例：提示：使用 〜に行きました 結構）",
+  "exampleAnswer": "模範答案（完整日語句子）",
+  "keyGrammar": "考點說明（一句話）"
+}`;
+
+  try {
+    const raw = await callClaude(JSON.stringify(analysisData), system);
+    const clean = raw.replace(/```json|```/g,'').trim();
+    quizData = JSON.parse(clean);
+    document.getElementById('quizPrompt').textContent=quizData.chinesePrompt;
+    document.getElementById('quizSub').textContent=quizData.hint||'';
+    document.getElementById('quizKeyGrammar').textContent='考點：'+quizData.keyGrammar;
+    document.getElementById('quizInput').value='';
+    document.getElementById('stepQuiz').style.display='block';
+  } catch(e){
+    alert('出題失敗，請再試：'+e.message);
+    document.getElementById('stepAnalysis').style.display='block';
+    setStep(2);
+  } finally {
+    hideLoading();
+  }
+}
+
+async function doCheck(){
+  const answer = document.getElementById('quizInput').value.trim();
+  if(!answer){ showError('quizError','請輸入你的日文作答'); return; }
+  hideError('quizError');
+  showLoading('AI 訂正中');
+  document.getElementById('stepQuiz').style.display='none';
+  setStep(4);
+
+  const system = `你是親切又嚴謹的日語老師，負責訂正學生的日語翻譯練習。
+回傳純 JSON，不要有任何額外說明、不要有 markdown 代碼塊：
+{
+  "correct": true或false（若基本正確、小錯誤可接受則為true，若有明顯文法錯誤則為false）,
+  "verdict": "一句評語（例：完美！或：很接近了，有個小錯誤）",
+  "modelAnswer": "模範答案（完整日語句子）",
+  "explanation": "詳細說明：哪裡對、哪裡錯、為什麼（3-5句，用中文說明）",
+  "tip": "一個實用的學習小提示（中文）"
+}`;
+
+  const prompt = `題目（中文）：${quizData.chinesePrompt}
+學生的日語作答：${answer}
+模範答案參考：${quizData.exampleAnswer}`;
+
+  try {
+    const raw = await callClaude(prompt, system);
+    const clean = raw.replace(/```json|```/g,'').trim();
+    const fb = JSON.parse(clean);
+    renderFeedback(fb, answer);
+    document.getElementById('stepFeedback').style.display='block';
+  } catch(e){
+    alert('訂正失敗，請再試：'+e.message);
+    document.getElementById('stepQuiz').style.display='block';
+    setStep(3);
+  } finally {
+    hideLoading();
+  }
+}
+
+function renderFeedback(fb, userAnswer){
+  const banner = document.getElementById('feedbackBanner');
+  banner.className = 'feedback-banner ' + (fb.correct ? 'correct' : 'wrong');
+
+  let html = `<strong>${fb.correct ? '✓ ' : '✗ '}${fb.verdict}</strong>`;
+  html += `<div style="margin-bottom:8px">${fb.explanation}</div>`;
+
+  if(!fb.correct){
+    html += `<div class="model-answer">你的作答：<span style="font-size:16px;font-weight:400">${userAnswer}</span></div>`;
+    html += `<div class="model-answer">模範答案：<span>${fb.modelAnswer}</span></div>`;
+  }
+
+  banner.innerHTML = html;
+
+  const tip = document.createElement('div');
+  tip.className = 'tip-box';
+  tip.textContent = '學習提示：' + fb.tip;
+  banner.after(tip);
+}
+
+function reset(){
+  document.getElementById('stepAnalysis').style.display='none';
+  document.getElementById('stepQuiz').style.display='none';
+  document.getElementById('stepFeedback').style.display='none';
+  // Remove tip box if any
+  document.querySelectorAll('.tip-box').forEach(el=>el.remove());
+  document.getElementById('stepInput').style.display='block';
+  document.getElementById('jpInput').value='';
+  document.getElementById('tokenRow').innerHTML='';
+  document.getElementById('detailCard').style.display='none';
+  analysisData=null; quizData=null;
+  setStep(1);
+}
+</script>
+
+
+</body></html>
